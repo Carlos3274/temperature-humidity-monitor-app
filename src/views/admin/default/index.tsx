@@ -27,6 +27,7 @@ import { Box, Icon, SimpleGrid, useColorModeValue } from '@chakra-ui/react'
 import MiniCalendar from 'components/calendar/MiniCalendar'
 import MiniStatistics from 'components/card/MiniStatistics'
 import IconBox from 'components/icons/IconBox'
+import { useEffect, useState } from 'react'
 import { MdOutlineWaterDrop } from 'react-icons/md'
 import {
   TbTemperature,
@@ -42,11 +43,39 @@ import WeeklyRevenue from 'views/admin/default/components/WeeklyRevenue'
 import tableDataCheck from 'views/admin/default/variables/tableDataCheck'
 import tableDataComplex from 'views/admin/default/variables/tableDataComplex'
 import CheckTable from 'views/admin/rtl/components/CheckTable'
+import useHumidity, { HumidityApi } from './services/use-humidity'
+import useTemperature, { TemperatureApi } from './services/use-temperature'
+import { getLastHumidity, getLastTemperature } from './utils'
 
 export default function UserReports() {
-  // Chakra Color Mode
   const brandColor = useColorModeValue('brand.500', 'white')
   const boxBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100')
+
+  const [temperatureData, setTemperatureData] = useState<TemperatureApi[]>()
+  const [humidityData, setHumidityData] = useState<HumidityApi[]>()
+
+  const { data: temperatureResponse } = useTemperature()
+  const { data: humidityResponse } = useHumidity()
+
+  useEffect(() => {
+    if (temperatureResponse) {
+      setTemperatureData(temperatureResponse)
+    }
+  }, [temperatureResponse])
+
+  useEffect(() => {
+    if (humidityResponse) {
+      setHumidityData(humidityResponse)
+    }
+  }, [humidityResponse])
+
+  const currentHumidity =
+    humidityData && getLastHumidity(humidityData).field2.slice(0, 2) + '%'
+
+  const currentTemperature =
+    temperatureData &&
+    getLastTemperature(temperatureData).field1.slice(0, 4) + ' °C'
+
   return (
     <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
       <SimpleGrid
@@ -66,10 +95,10 @@ export default function UserReports() {
             />
           }
           name="Temperatura Atual"
-          value="30 °C"
+          value={currentTemperature ?? '-'}
         />
         <MiniStatistics
-          growth="+23%"
+          growth="+3%"
           startContent={
             <IconBox
               w="56px"
@@ -127,7 +156,7 @@ export default function UserReports() {
             />
           }
           name="Umidade"
-          value="60%"
+          value={currentHumidity ?? '-'}
         />
 
         <MiniStatistics
@@ -167,7 +196,7 @@ export default function UserReports() {
             />
           }
           name="Umidade Máx"
-          value="65%"
+          value="70%"
         />
       </SimpleGrid>
 
